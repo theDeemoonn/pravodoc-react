@@ -1,0 +1,62 @@
+{
+  "name": "pravodoc",
+  "version": "0.1.0",
+  "private": true,
+  "author": {
+    "name": "Pravodoc inc",
+    "email": "support@pravodoc.ru",
+    "url": "https://pravodoc.ru"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.0.1",
+    "@chakra-ui/react": "^2.5.4",
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
+    "@headlessui/react": "^1.7.13",
+    "@heroicons/react": "^2.0.16",
+    "@reduxjs/toolkit": "^1.9.3",
+    "@types/node": "18.15.5",
+    "@types/react": "18.0.28",
+    "@types/react-dom": "18.0.11",
+    "@types/react-redux": "^7.1.25",
+    "antd": "^5.3.2",
+    "axios": "^1.3.4",
+    "eslint": "8.36.0",
+    "eslint-config-next": "^13.2.4",
+    "formik": "^2.2.9",
+    "framer-motion": "^10.10.0",
+    "i18next": "^22.4.13",
+    "i18next-browser-languagedetector": "^7.0.1",
+    "i18next-http-backend": "^2.2.0",
+    "localforage": "^1.10.0",
+    "lodash": "^4.17.21",
+    "match-sorter": "^6.3.1",
+    "qs": "^6.11.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-i18next": "^12.2.0",
+    "react-redux": "^8.0.5",
+    "react-router-dom": "^6.9.0",
+    "react-toastify": "^9.1.2",
+    "sort-by": "^1.2.0"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@types/lodash": "^4.14.192",
+    "@types/qs": "^6.9.7",
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@vitejs/plugin-react": "^3.1.0",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.21",
+    "sass": "^1.59.3",
+    "tailwindcss": "^3.2.7",
+    "typescript": "5.0.2",
+    "vite": "^4.1.0"
+  }
+}

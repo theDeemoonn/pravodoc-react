@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-family);
+  background: var(--color-background);
+  min-width: 500px;
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light white;
+  color: var(--color-text);
+  background-color: #daf5e5;
+
+
+  $color-primary: #74b49b;
+  $color-background: #daf5e5;
+  $color-text: #ffffff;
+  $padding: 6rem;
+
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+
+
+
+
+

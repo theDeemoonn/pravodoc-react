@@ -1,0 +1,8 @@
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--padding);
+  min-height: 100vh;
+  margin-right: 20px;
+}
