@@ -1,13 +1,17 @@
 import { PaperClipIcon } from '@heroicons/react/20/solid'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 
 import avatar from '@/assets/img/avatar.png'
+import { useAppSelector } from '@/hook/redux'
 import { userAPI } from '@/services/userService'
 
 const Profile = () => {
-	const { id } = useParams()
-	const { data: user } = userAPI.useFetchUserByIdQuery(id?.toString() || '')
+	const { data: user } = userAPI.useFetchUserByIdQuery(null, {
+		skip: false,
+		refetchOnMountOrArgChange: true,
+		refetchOnReconnect: true
+	})
 
 	return (
 		<>

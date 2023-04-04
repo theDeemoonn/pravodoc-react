@@ -1,7 +1,8 @@
 import { notification } from 'antd'
 import { useFormik } from 'formik'
 import { useCookies } from 'react-cookie'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { TypeOf, object, string } from 'zod'
 
 import FaceBook from '@/assets/svg/facebook'
@@ -18,14 +19,15 @@ const loginSchema = object({
 
 export type LoginInput = TypeOf<typeof loginSchema>
 
-export default function Login() {
+export default function Auth() {
 	const [loginUser, { isLoading, isError, error, isSuccess }] = useLoginUserMutation()
 	const [api, contextHolder] = notification.useNotification()
 
 	const navigate = useNavigate()
 	const location = useLocation()
 	const from = ((location.state as any)?.from.pathname as string) || `/profile`
-	const [setCookie] = useCookies()
+
+	const dispatch = useDispatch()
 
 	const formik = useFormik({
 		initialValues: {
@@ -45,8 +47,7 @@ export default function Login() {
 							description: 'Вы вошли в аккаунт',
 							placement: 'topRight'
 						})
-						localStorage.setItem('access_token', JSON.stringify(res.user.accessToken))
-						console.log(res.user.accessToken)
+						localStorage.setItem('access_token', res.accessToken)
 						navigate(from)
 					}
 				})
@@ -71,10 +72,13 @@ export default function Login() {
 					<p className='focus:outline-none text-2xl font-extrabold leading-6 text-gray-800'>Войти в аккаунт</p>
 					<p className='focus:outline-none text-sm mt-4 font-medium leading-none text-gray-500'>
 						Нет аккаунта?{' '}
-						<a className='hover:text-gray-500 focus:text-gray-500 focus:outline-none focus:underline hover:underline text-sm font-medium leading-none  text-gray-800 cursor-pointer'>
+						<Link
+							to='/register'
+							className='hover:text-gray-500 focus:text-gray-500 focus:outline-none focus:underline hover:underline text-sm font-medium leading-none  text-gray-800 cursor-pointer'
+						>
 							{' '}
 							Зарегистрироваться
-						</a>
+						</Link>
 					</p>
 
 					<div className='mt-6  w-full'>

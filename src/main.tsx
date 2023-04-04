@@ -9,7 +9,7 @@ import App from './App'
 import './index.scss'
 import Page404 from '@/components/pages/404/404'
 import { router } from '@/router'
-import { setupStore } from '@/store/store'
+import { store } from '@/store/store'
 
 // const router = createBrowserRouter([
 // 	{
@@ -18,7 +18,6 @@ import { setupStore } from '@/store/store'
 // 		errorElement: <Page404 />
 // 	}
 // ])
-const store = setupStore()
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
 	<Provider store={store}>

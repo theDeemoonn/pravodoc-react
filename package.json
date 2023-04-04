@@ -38,12 +38,14 @@
     "match-sorter": "^6.3.1",
     "qs": "^6.11.1",
     "react": "^18.2.0",
+    "react-cookie": "^4.1.1",
     "react-dom": "^18.2.0",
     "react-i18next": "^12.2.0",
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.9.0",
     "react-toastify": "^9.1.2",
-    "sort-by": "^1.2.0"
+    "sort-by": "^1.2.0",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",

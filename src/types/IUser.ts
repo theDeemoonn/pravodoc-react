@@ -23,7 +23,7 @@ export interface IUser {
 
 export interface Role {
 	id: number
-	value: UserRole
+	value: string
 	description: string
 	createdAt: string
 	updatedAt: string

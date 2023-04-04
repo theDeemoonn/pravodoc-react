@@ -1,13 +1,14 @@
 import { Disclosure, Menu, Popover, Transition } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Button, notification } from 'antd'
 import { Fragment, useEffect } from 'react'
-import { Link, NavLink, useParams } from 'react-router-dom'
+import { useCookies } from 'react-cookie'
+import { useDispatch } from 'react-redux'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 
-import { IUser } from '@/types/IUser'
-
-import { useAppDispatch, useAppSelector } from '@/hook/redux'
-import { useProtectedMutation } from '@/services/authService'
+import { useLogoutUserMutation } from '@/services/authApiService'
 import { userAPI } from '@/services/userService'
+import { logout } from '@/store/reducer/userSlice'
 
 const navigation = [
 	{ name: 'Разместить заказ', href: '#', current: true },
@@ -40,16 +41,39 @@ const solutions = [
 ]
 
 const HeaderComponent = () => {
-	const dispatch = useAppDispatch()
-	const { user: userData } = useAppSelector(state => state.authReducer)
-	const { id } = useParams()
-	const { data: user } = userAPI.useFetchUserByIdQuery(id?.toString() || '')
-	const [attemptAccess, { data, error, isLoading }] = useProtectedMutation()
+	const [cookies] = useCookies(['logged_in'])
+	const logged_in = cookies.logged_in
+	const navigate = useNavigate()
+	const [logoutUser, { isLoading, isSuccess, error, isError }] = useLogoutUserMutation()
+
+	const [api, contextHolder] = notification.useNotification()
+	const { data: user } = userAPI.useFetchUserByIdQuery(null)
+
+	const dispatch = useDispatch()
+
+	useEffect(() => {
+		if (isSuccess) {
+			navigate('/profile')
+		}
+	}, [isSuccess])
+
+	const onLogoutHandler = async () => {
+		await logoutUser()
+		dispatch(logout())
+		if (logged_in) {
+			api.success({
+				message: 'Успешно',
+				description: 'Вы вышли из аккаунта',
+				placement: 'topRight'
+			})
+		}
+	}
 
 	return (
 		<Disclosure as='nav' className='bg-gray-800'>
 			{({ open }) => (
 				<>
+					{contextHolder}
 					<div className='mx-auto max-w-7xl px-2 sm:px-6 lg:px-8'>
 						<div className='relative flex h-16 items-center justify-between'>
 							<div className='absolute inset-y-0 left-0 flex items-center sm:hidden'>
@@ -169,7 +193,7 @@ const HeaderComponent = () => {
 											<Menu.Item>
 												{({ active }) => (
 													<Link
-														to={user ? `/profile/${userData.id}` : '/login'}
+														to={logged_in ? `/profile` : '/login'}
 														className={classNames(active ? 'bg-gray-100' : '', 'no-underline block px-4 py-2 text-sm text-gray-700')}
 													>
 														Профиль
@@ -185,7 +209,11 @@ const HeaderComponent = () => {
 											</Menu.Item>
 											<Menu.Item>
 												{({ active }) => (
-													<Link to='#' className={classNames(active ? 'bg-gray-100' : '', 'no-underline block px-4 py-2 text-sm text-gray-700')}>
+													<Link
+														to='/'
+														onClick={() => onLogoutHandler()}
+														className={classNames(active ? 'bg-gray-100' : '', 'no-underline block px-4 py-2 text-sm text-gray-700')}
+													>
 														Выйти
 													</Link>
 												)}
