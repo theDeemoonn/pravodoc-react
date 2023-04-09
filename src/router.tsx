@@ -4,7 +4,7 @@ import { Route, createBrowserRouter, createRoutesFromElements } from 'react-rout
 import Layout from '@/components/layout/Layout'
 import RequireUser from '@/components/layout/RequireUser'
 import Page404 from '@/components/pages/404/404'
-import Auth from '@/components/pages/auth/Auth'
+import Auth from '@/components/pages/auth/Login'
 import RegisterPage from '@/components/pages/auth/Register'
 import HomePage from '@/components/pages/home/HomePage'
 import { Profile } from '@/components/pages/profile/Profile'
@@ -14,9 +14,9 @@ export const router = createBrowserRouter(
 		<Route path='/' element={<Layout />} errorElement={<Page404 />}>
 			<Route index element={<HomePage />} />
 			<Route errorElement={<Page404 />}></Route>
-			{/*<Route element={<RequireUser allowedRoles={'admin'} />}>*/}
-			<Route path='/profile' element={<Profile />} />
-			{/*</Route>*/}
+			<Route element={<RequireUser allowedRoles={['USER', 'ADMIN']} />}>
+				<Route path='/profile' element={<Profile />} />
+			</Route>
 
 			<Route path='login' element={<Auth />} />
 			<Route path='register' element={<RegisterPage />} />

@@ -14,11 +14,12 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.0.1",
-    "@chakra-ui/react": "^2.5.4",
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
     "@headlessui/react": "^1.7.13",
     "@heroicons/react": "^2.0.16",
+    "@mui/icons-material": "^5.11.16",
+    "@mui/material": "^5.11.16",
     "@reduxjs/toolkit": "^1.9.3",
     "@types/node": "18.15.5",
     "@types/react": "18.0.28",
@@ -29,7 +30,6 @@
     "eslint": "8.36.0",
     "eslint-config-next": "^13.2.4",
     "formik": "^2.2.9",
-    "framer-motion": "^10.10.0",
     "i18next": "^22.4.13",
     "i18next-browser-languagedetector": "^7.0.1",
     "i18next-http-backend": "^2.2.0",
@@ -45,7 +45,9 @@
     "react-router-dom": "^6.9.0",
     "react-toastify": "^9.1.2",
     "sort-by": "^1.2.0",
-    "zod": "^3.21.4"
+    "yup": "^1.0.2",
+    "zod": "^3.21.4",
+    "zod-formik-adapter": "^1.2.0"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",

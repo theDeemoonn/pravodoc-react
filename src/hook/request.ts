@@ -33,15 +33,19 @@ async function checkStatus<T extends HttpError>(response: AxiosResponse<T>) {
 	throw error.message
 }
 
+const cookie = document.cookie.split('=')[1]
+
+// const accessToken = cookie.split('=')[1]
+
 export async function request<T>(url: string, config?: AxiosRequestConfig) {
-	const baseURL = 'http://localhost:4000/auth'
+	const baseURL = 'http://localhost:4000/'
 
 	return axios(url, {
 		...config,
 		baseURL,
 		headers: {
 			Accept: 'application/json',
-			Authorization: `Bearer ${localStorage.getItem('token')}`,
+			Authorization: `Bearer ${cookie}`,
 			'Content-Type': 'application/json',
 			'x-office-id': localStorage.getItem('office_id') || '',
 			...config?.headers

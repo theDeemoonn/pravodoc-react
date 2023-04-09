@@ -1,17 +1,21 @@
 import { PaperClipIcon } from '@heroicons/react/20/solid'
 import React, { useEffect } from 'react'
-import { useParams } from 'react-router-dom'
 
 import avatar from '@/assets/img/avatar.png'
-import { useAppSelector } from '@/hook/redux'
 import { userAPI } from '@/services/userService'
 
 const Profile = () => {
 	const { data: user } = userAPI.useFetchUserByIdQuery(null, {
-		skip: false,
-		refetchOnMountOrArgChange: true,
-		refetchOnReconnect: true
+		refetchOnFocus: true,
+		refetchOnReconnect: true,
+		refetchOnMountOrArgChange: true
 	})
+
+	useEffect(() => {
+		if (user) {
+			document.title = `${user.surname} ${user.name} - Профиль`
+		}
+	}, [user])
 
 	return (
 		<>

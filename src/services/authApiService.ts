@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
 import { IAuthUser, IGenericResponse } from '@/types/authUser'
 
-import { LoginInput } from '@/components/pages/auth/Auth'
+import { LoginInput } from '@/components/pages/auth/Login'
 import { RegisterInput } from '@/components/pages/auth/Register'
 import { userAPI } from '@/services/userService'
 
@@ -54,7 +54,8 @@ export const authAPI = createApi({
 			query() {
 				return {
 					url: 'logout',
-					credentials: 'include'
+					credentials: 'include',
+					method: 'POST'
 				}
 			}
 		})

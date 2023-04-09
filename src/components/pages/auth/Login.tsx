@@ -1,7 +1,10 @@
+import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { FormControl, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField } from '@mui/material'
 import { notification } from 'antd'
 import { useFormik } from 'formik'
-import { useCookies } from 'react-cookie'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import * as yup from 'yup'
 import { TypeOf, object, string } from 'zod'
 
 import FaceBook from '@/assets/svg/facebook'
@@ -9,11 +12,13 @@ import { useLoginUserMutation } from '@/services/authApiService'
 import { AntButton } from '@/ui'
 
 const loginSchema = object({
-	email: string().min(1, 'Email address is required').email('Email Address is invalid'),
-	password: string()
-		.min(1, 'Password is required')
-		.min(8, 'Password must be more than 8 characters')
-		.max(32, 'Password must be less than 32 characters')
+	email: string().min(1, 'Укажите адрес электронной почты').email('Адрес электронной почты недействителен').trim(),
+	password: string().min(1, 'Необходим пароль').min(6, 'Пароль должен быть больше 6 символов').max(32, 'Пароль должен быть меньше 32 символов')
+})
+
+const validationSchema = yup.object({
+	email: yup.string().email('Адрес электронной почты недействителен').required('Укажите адрес электронной почты'),
+	password: yup.string().min(6, 'Пароль должен быть больше 6 символов').max(32, 'Пароль должен быть меньше 32 символов').required('Необходим пароль')
 })
 
 export type LoginInput = TypeOf<typeof loginSchema>
@@ -25,30 +30,22 @@ export default function Login() {
 	const navigate = useNavigate()
 	const location = useLocation()
 	const from = ((location.state as any)?.from.pathname as string) || `/profile`
-	const [setCookie] = useCookies()
 
 	const formik = useFormik({
 		initialValues: {
 			email: '',
-			password: ''
+			password: '',
+			showPassword: false
 		},
-		validateOnBlur: false,
-		validateOnChange: false,
+		validationSchema: validationSchema,
+		validateOnBlur: true,
 		enableReinitialize: true,
+		validateOnChange: true,
 		onSubmit: () => {
 			loginUser(formik.values)
 				.unwrap()
-				.then(res => {
-					if (res.user) {
-						api.success({
-							message: 'Успешно',
-							description: 'Вы вошли в аккаунт',
-							placement: 'topRight'
-						})
-						localStorage.setItem('access_token', JSON.stringify(res.user.accessToken))
-						console.log(res.user.accessToken)
-						navigate(from)
-					}
+				.then(() => {
+					formik.resetForm()
 				})
 				.catch(err => {
 					api.error({
@@ -61,6 +58,27 @@ export default function Login() {
 		}
 	})
 
+	useEffect(() => {
+		if (isSuccess) {
+			api.success({
+				message: 'Успешно',
+				description: 'Вы вошли в аккаунт',
+				placement: 'topRight'
+			})
+			setTimeout(() => {
+				navigate(from)
+			}, 500)
+		}
+	}, [isSuccess])
+
+	const handleClickShowPassword = () => {
+		formik.setFieldValue('showPassword', !formik.values.showPassword)
+	}
+
+	const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+		event.preventDefault()
+	}
+
 	return (
 		<div className='h-full bg-gradient-to-tl from-white-600 to-indigo-900 w-full py-16 px-4 '>
 			{contextHolder}
@@ -71,49 +89,66 @@ export default function Login() {
 					<p className='focus:outline-none text-2xl font-extrabold leading-6 text-gray-800'>Войти в аккаунт</p>
 					<p className='focus:outline-none text-sm mt-4 font-medium leading-none text-gray-500'>
 						Нет аккаунта?{' '}
-						<a className='hover:text-gray-500 focus:text-gray-500 focus:outline-none focus:underline hover:underline text-sm font-medium leading-none  text-gray-800 cursor-pointer'>
+						<Link
+							to='/register'
+							className='hover:text-gray-500 focus:text-gray-500 focus:outline-none focus:underline hover:underline text-sm font-medium leading-none  text-gray-800 cursor-pointer'
+						>
 							{' '}
 							Зарегистрироваться
-						</a>
+						</Link>
 					</p>
 
 					<div className='mt-6  w-full'>
-						<label id='email' className='text-sm font-medium leading-none text-gray-800'>
-							Email
-						</label>
 						<div className='relative flex items-center justify-center'>
-							<input
-								aria-label='Email'
+							<TextField
+								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+								id='outlined-basic'
+								label='Электронная почта'
 								name='email'
 								value={formik.values.email || ''}
 								onChange={formik.handleChange}
-								className='bg-gray-200 border rounded  text-xs font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+								onBlur={formik.handleBlur}
+								error={!!formik.errors.email && !!formik.touched.email}
+								// helperText='Incorrect entry.'
 							/>
 						</div>
 					</div>
 					<div className='mt-6  w-full'>
-						<label htmlFor='pass' className='text-sm font-medium leading-none text-gray-800'>
-							Password
-						</label>
 						<div className='relative flex items-center justify-center'>
-							<input
-								aria-label='Пароль'
-								name='password'
-								type={'password'}
-								value={formik.values.password || ''}
-								onChange={formik.handleChange}
-								className='bg-gray-200 border rounded  text-xs font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-							/>
-							<div className='absolute right-0 mt-2 mr-3 cursor-pointer'>
-								<svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
-									<path
-										d='M7.99978 2C11.5944 2 14.5851 4.58667 15.2124 8C14.5858 11.4133 11.5944 14 7.99978 14C4.40511 14 1.41444 11.4133 0.787109 8C1.41378 4.58667 4.40511 2 7.99978 2ZM7.99978 12.6667C9.35942 12.6664 10.6787 12.2045 11.7417 11.3568C12.8047 10.509 13.5484 9.32552 13.8511 8C13.5473 6.67554 12.8031 5.49334 11.7402 4.64668C10.6773 3.80003 9.35864 3.33902 7.99978 3.33902C6.64091 3.33902 5.32224 3.80003 4.25936 4.64668C3.19648 5.49334 2.45229 6.67554 2.14844 8C2.45117 9.32552 3.19489 10.509 4.25787 11.3568C5.32085 12.2045 6.64013 12.6664 7.99978 12.6667ZM7.99978 11C7.20413 11 6.44106 10.6839 5.87846 10.1213C5.31585 9.55871 4.99978 8.79565 4.99978 8C4.99978 7.20435 5.31585 6.44129 5.87846 5.87868C6.44106 5.31607 7.20413 5 7.99978 5C8.79543 5 9.55849 5.31607 10.1211 5.87868C10.6837 6.44129 10.9998 7.20435 10.9998 8C10.9998 8.79565 10.6837 9.55871 10.1211 10.1213C9.55849 10.6839 8.79543 11 7.99978 11ZM7.99978 9.66667C8.4418 9.66667 8.86573 9.49107 9.17829 9.17851C9.49085 8.86595 9.66644 8.44203 9.66644 8C9.66644 7.55797 9.49085 7.13405 9.17829 6.82149C8.86573 6.50893 8.4418 6.33333 7.99978 6.33333C7.55775 6.33333 7.13383 6.50893 6.82126 6.82149C6.5087 7.13405 6.33311 7.55797 6.33311 8C6.33311 8.44203 6.5087 8.86595 6.82126 9.17851C7.13383 9.49107 7.55775 9.66667 7.99978 9.66667Z'
-										fill='#71717A'
-									/>
-								</svg>
-							</div>
+							<FormControl
+								sx={{
+									width: 500,
+									maxWidth: '100%'
+								}}
+								variant='outlined'
+							>
+								<InputLabel htmlFor='outlined-adornment-password'>Пароль</InputLabel>
+								<OutlinedInput
+									id='outlined-adornment-password'
+									name='password'
+									type={formik.values.showPassword ? 'text' : 'password'}
+									value={formik.values.password || ''}
+									onChange={formik.handleChange}
+									onBlur={formik.handleBlur}
+									error={!!formik.errors.password && !!formik.touched.password}
+									endAdornment={
+										<InputAdornment position='end'>
+											<IconButton
+												aria-label='toggle password visibility'
+												onClick={handleClickShowPassword}
+												onMouseDown={handleMouseDownPassword}
+												edge='end'
+											>
+												{formik.values.showPassword ? <VisibilityOff /> : <Visibility />}
+											</IconButton>
+										</InputAdornment>
+									}
+									label={'Пароль'}
+								/>
+							</FormControl>
 						</div>
 					</div>
+
 					<div className='mt-8  justify-center items-center flex'>
 						<AntButton
 							className='flex w-48  justify-center hover:text-white hover:bg-green-500'

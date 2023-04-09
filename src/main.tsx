@@ -1,6 +1,6 @@
-import { ChakraProvider } from '@chakra-ui/react'
 import { ConfigProvider } from 'antd'
 import React, { Suspense } from 'react'
+import { CookiesProvider } from 'react-cookie'
 import ReactDOM from 'react-dom/client'
 import { Provider } from 'react-redux'
 import { BrowserRouter, RouterProvider, createBrowserRouter } from 'react-router-dom'
@@ -29,9 +29,11 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
 				}
 			}}
 		>
-			<Suspense fallback={<div>Loading...</div>}>
-				<RouterProvider router={router} />
-			</Suspense>
+			<CookiesProvider>
+				<Suspense fallback={<div>Loading...</div>}>
+					<RouterProvider router={router} />
+				</Suspense>
+			</CookiesProvider>
 		</ConfigProvider>
 	</Provider>
 )

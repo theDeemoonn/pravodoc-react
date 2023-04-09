@@ -1,13 +1,12 @@
+import { UserOutlined } from '@ant-design/icons'
 import { Disclosure, Menu, Popover, Transition } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import { Button, notification } from 'antd'
+import { Avatar, notification } from 'antd'
 import { Fragment, useEffect } from 'react'
-import { useCookies } from 'react-cookie'
-import { useDispatch } from 'react-redux'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 
+import { useAppDispatch, useAppSelector } from '@/hook/redux'
 import { useLogoutUserMutation } from '@/services/authApiService'
-import { userAPI } from '@/services/userService'
 import { logout } from '@/store/reducer/userSlice'
 
 const navigation = [
@@ -41,26 +40,24 @@ const solutions = [
 ]
 
 const HeaderComponent = () => {
-	const [cookies] = useCookies(['logged_in'])
-	const logged_in = cookies.logged_in
 	const navigate = useNavigate()
 	const [logoutUser, { isLoading, isSuccess, error, isError }] = useLogoutUserMutation()
 
 	const [api, contextHolder] = notification.useNotification()
-	const { data: user } = userAPI.useFetchUserByIdQuery(null)
 
-	const dispatch = useDispatch()
+	const user = useAppSelector(state => state.userState.user)
+	const dispatch = useAppDispatch()
 
 	useEffect(() => {
 		if (isSuccess) {
-			navigate('/profile')
+			navigate('/')
 		}
 	}, [isSuccess])
 
 	const onLogoutHandler = async () => {
 		await logoutUser()
 		dispatch(logout())
-		if (logged_in) {
+		if (!isError) {
 			api.success({
 				message: 'Успешно',
 				description: 'Вы вышли из аккаунта',
@@ -177,7 +174,11 @@ const HeaderComponent = () => {
 									<div>
 										<Menu.Button className='flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'>
 											<span className='sr-only'>Open user menu</span>
-											<img className='h-8 w-8 rounded-full' src='src/assets/img/avatar.png' alt='user avatar' />
+											<Avatar src={user?.avatar} size={'large'}>
+												{user ? `${user?.name?.charAt(0).toUpperCase()}${user?.surname?.charAt(0).toUpperCase()}` : <UserOutlined />}
+											</Avatar>
+
+											{/*<img className='h-8 w-8 rounded-full' src='src/assets/img/avatar.png' alt='user avatar' />*/}
 										</Menu.Button>
 									</div>
 									<Transition
@@ -193,7 +194,7 @@ const HeaderComponent = () => {
 											<Menu.Item>
 												{({ active }) => (
 													<Link
-														to={logged_in ? `/profile` : '/login'}
+														to={user ? `/profile` : '/login'}
 														className={classNames(active ? 'bg-gray-100' : '', 'no-underline block px-4 py-2 text-sm text-gray-700')}
 													>
 														Профиль
