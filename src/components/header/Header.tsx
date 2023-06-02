@@ -10,7 +10,7 @@ import { useLogoutUserMutation } from '@/services/authApiService'
 import { logout } from '@/store/reducer/userSlice'
 
 const navigation = [
-	{ name: 'Разместить заказ', href: '#', current: true },
+	{ name: 'Разместить заказ', href: '/create', current: true },
 	{ name: 'Team', href: '#', current: false },
 	{ name: 'Projects', href: '#', current: false },
 	{ name: 'Calendar', href: '#', current: false }
@@ -119,7 +119,7 @@ const HeaderComponent = () => {
 												<span className='sr-only'>View notifications</span>
 												<BellIcon
 													className={`${open ? '' : 'text-opacity-70'}
-                  h-6 w-6`}
+												-6 w-6`}
 													aria-hidden='true'
 												/>
 											</Popover.Button>
@@ -195,6 +195,7 @@ const HeaderComponent = () => {
 												{({ active }) => (
 													<Link
 														to={user ? `/profile` : '/login'}
+														state={{ from: location.pathname }}
 														className={classNames(active ? 'bg-gray-100' : '', 'no-underline block px-4 py-2 text-sm text-gray-700')}
 													>
 														Профиль

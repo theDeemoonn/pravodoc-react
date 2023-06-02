@@ -1,4 +1,4 @@
-import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons'
 import { FormControl, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField } from '@mui/material'
 import { notification } from 'antd'
 import { useFormik } from 'formik'
@@ -23,13 +23,15 @@ const validationSchema = yup.object({
 
 export type LoginInput = TypeOf<typeof loginSchema>
 
-export default function Login() {
+function Login() {
 	const [loginUser, { isLoading, isError, error, isSuccess }] = useLoginUserMutation()
 	const [api, contextHolder] = notification.useNotification()
 
 	const navigate = useNavigate()
 	const location = useLocation()
 	const from = ((location.state as any)?.from.pathname as string) || `/profile`
+
+	console.log('from', location)
 
 	const formik = useFormik({
 		initialValues: {
@@ -38,9 +40,9 @@ export default function Login() {
 			showPassword: false
 		},
 		validationSchema: validationSchema,
-		validateOnBlur: true,
 		enableReinitialize: true,
-		validateOnChange: true,
+		// validateOnBlur: true,
+		validateOnChange: false,
 		onSubmit: () => {
 			loginUser(formik.values)
 				.unwrap()
@@ -79,6 +81,12 @@ export default function Login() {
 		event.preventDefault()
 	}
 
+	const handleEnter = (e: React.KeyboardEvent<HTMLDivElement>) => {
+		if (e.key === 'Enter') {
+			formik.handleSubmit()
+		}
+	}
+
 	return (
 		<div className='h-full bg-gradient-to-tl from-white-600 to-indigo-900 w-full py-16 px-4 '>
 			{contextHolder}
@@ -91,7 +99,7 @@ export default function Login() {
 						Нет аккаунта?{' '}
 						<Link
 							to='/register'
-							className='hover:text-gray-500 focus:text-gray-500 focus:outline-none focus:underline hover:underline text-sm font-medium leading-none  text-gray-800 cursor-pointer'
+							className='hover:text-gray-5 00 focus:text-gray-500 focus:outline-none focus:underline hover:underline text-sm font-medium leading-none  text-gray-800 cursor-pointer'
 						>
 							{' '}
 							Зарегистрироваться
@@ -139,7 +147,7 @@ export default function Login() {
 												onMouseDown={handleMouseDownPassword}
 												edge='end'
 											>
-												{formik.values.showPassword ? <VisibilityOff /> : <Visibility />}
+												{formik.values.showPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
 											</IconButton>
 										</InputAdornment>
 									}
@@ -202,3 +210,5 @@ export default function Login() {
 		</div>
 	)
 }
+
+export default Login

@@ -4,7 +4,6 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 
 import './404.scss'
-import { AntButton } from '@/ui'
 
 function Page404() {
 	return (

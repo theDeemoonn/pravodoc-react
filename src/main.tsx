@@ -1,13 +1,13 @@
 import { ConfigProvider } from 'antd'
+import ruRU from 'antd/lib/locale/ru_RU'
+import 'dayjs/locale/ru'
 import React, { Suspense } from 'react'
 import { CookiesProvider } from 'react-cookie'
 import ReactDOM from 'react-dom/client'
 import { Provider } from 'react-redux'
-import { BrowserRouter, RouterProvider, createBrowserRouter } from 'react-router-dom'
+import { RouterProvider } from 'react-router-dom'
 
-import App from './App'
 import './index.scss'
-import Page404 from '@/components/pages/404/404'
 import { router } from '@/router'
 import { store } from '@/store/store'
 
@@ -28,6 +28,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
 					colorLinkHover: '#00b96b'
 				}
 			}}
+			locale={ruRU}
 		>
 			<CookiesProvider>
 				<Suspense fallback={<div>Loading...</div>}>

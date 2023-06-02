@@ -1,15 +1,33 @@
-import { PaperClipIcon } from '@heroicons/react/20/solid'
-import React, { useEffect } from 'react'
+import { Button } from 'antd'
+import React, { useEffect, useState } from 'react'
 
 import avatar from '@/assets/img/avatar.png'
+import ProfileEditModal from '@/components/pages/profile/ProfileEditModal'
 import { userAPI } from '@/services/userService'
+import { phoneFormatDash } from '@/utils/phone-number'
 
 const Profile = () => {
+	const [pollingInterval, setPollingInterval] = useState(0)
 	const { data: user } = userAPI.useFetchUserByIdQuery(null, {
 		refetchOnFocus: true,
 		refetchOnReconnect: true,
-		refetchOnMountOrArgChange: true
+		refetchOnMountOrArgChange: true,
+		pollingInterval: pollingInterval
 	})
+
+	const [isModalOpen, setIsModalOpen] = useState(false)
+
+	const handleModalOpen = () => {
+		setIsModalOpen(true)
+	}
+
+	const handleModalClose = () => {
+		setIsModalOpen(false)
+		setPollingInterval(100)
+		setTimeout(() => {
+			setPollingInterval(0)
+		}, 105)
+	}
 
 	useEffect(() => {
 		if (user) {
@@ -35,7 +53,7 @@ const Profile = () => {
 							</div>
 							<div className='bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6'>
 								<dt className='text-sm font-medium text-gray-500'>Телефон</dt>
-								<dd className='mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0'>{user.phone}</dd>
+								<dd className='mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0'>{phoneFormatDash(String(user?.phone))}</dd>
 							</div>
 							<div className='bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6'>
 								<dt className='text-sm font-medium text-gray-500'>Email</dt>
@@ -49,31 +67,20 @@ const Profile = () => {
 								<dt className='text-sm font-medium text-gray-500'>О себе</dt>
 								<dd className='mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0'>{user.description}</dd>
 							</div>
-							<div className='bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6'>
-								<dt className='text-sm font-medium text-gray-500'>Attachments</dt>
+							<div className='bg-white px-4 py-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6'>
 								<dd className='mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0'>
 									<ul role='list' className='divide-y divide-gray-200 rounded-md border border-gray-200'>
-										<li className='flex items-center justify-between py-3 pl-3 pr-4 text-sm'>
-											<div className='flex w-0 flex-1 items-center'>
-												<PaperClipIcon className='h-5 w-5 flex-shrink-0 text-gray-400' aria-hidden='true' />
-												<span className='ml-2 w-0 flex-1 truncate'>resume_back_end_developer.pdf</span>
-											</div>
+										<li className='flex items-center justify-end py-3 pl-3 pr-4 text-sm'>
 											<div className='ml-4 flex-shrink-0'>
-												<a href='#' className='font-medium text-indigo-600 hover:text-indigo-500'>
-													Download
-												</a>
+												<Button type={'link'} onClick={() => handleModalOpen()}>
+													Редактировать профиль
+												</Button>
 											</div>
 										</li>
-										<li className='flex items-center justify-between py-3 pl-3 pr-4 text-sm'>
-											<div className='flex w-0 flex-1 items-center'>
-												<PaperClipIcon className='h-5 w-5 flex-shrink-0 text-gray-400' aria-hidden='true' />
-												<span className='ml-2 w-0 flex-1 truncate'>coverletter_back_end_developer.pdf</span>
-											</div>
-											<div className='ml-4 flex-shrink-0'>
-												<a href='#' className='font-medium text-indigo-600 hover:text-indigo-500'>
-													Download
-												</a>
-											</div>
+										<li className='flex items-center justify-end py-3 pl-3 pr-4 text-sm'>
+											<Button type={'link'} danger onClick={() => handleModalOpen()}>
+												Удалить аккаунт
+											</Button>
 										</li>
 									</ul>
 								</dd>
@@ -82,6 +89,7 @@ const Profile = () => {
 					</div>
 				)}
 			</div>
+			<ProfileEditModal open={isModalOpen} onCancel={handleModalClose} title={'Изменение данных пользователя'} />
 		</>
 	)
 }

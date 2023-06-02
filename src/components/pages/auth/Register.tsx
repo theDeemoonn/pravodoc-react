@@ -1,4 +1,4 @@
-import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons'
 import { FormControl, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField } from '@mui/material'
 import { notification } from 'antd'
 import { useFormik } from 'formik'
@@ -27,7 +27,8 @@ const validationSchema = yup.object({
 	surname: yup.string().required('Требуется фамилия'),
 	name: yup.string().required('Требуется имя'),
 	age: yup.number().required('Укажите возраст').max(100, 'Ого'),
-	phone: yup.string().matches(phoneRegExp, 'Не верный номер').required('Укажите номер телефона')
+	phone: yup.string().min(11).max(11).matches(phoneRegExp, 'Не верный номер').required('Укажите номер телефона'),
+	description: yup.string().max(1000, 'Максимум 1000 символов')
 })
 
 export type RegisterInput = TypeOf<typeof registerSchema>
@@ -46,7 +47,8 @@ const RegisterPage = () => {
 			name: '',
 			age: 0,
 			phone: 0,
-			showPassword: false
+			showPassword: false,
+			description: ''
 		},
 		validationSchema: validationSchema,
 
@@ -75,7 +77,7 @@ const RegisterPage = () => {
 				placement: 'topRight'
 			})
 			navigate(from)
-		} 
+		}
 	}, [isSuccess])
 
 	const handleClickShowPassword = () => {
@@ -144,7 +146,7 @@ const RegisterPage = () => {
 												onMouseDown={handleMouseDownPassword}
 												edge='end'
 											>
-												{formik.values.showPassword ? <VisibilityOff /> : <Visibility />}
+												{formik.values.showPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
 											</IconButton>
 										</InputAdornment>
 									}
@@ -211,14 +213,27 @@ const RegisterPage = () => {
 								aria-label='Phone'
 								name='phone'
 								value={formik.values.phone || ''}
+								inputMode={'tel'}
 								onChange={formik.handleChange}
 								error={!!formik.errors.phone && !!formik.touched.phone}
-								helperText={formik.errors.phone && formik.touched.phone ? 'Номер телефона должен быть в формате 8 999 999-99-99' : ''}
+								helperText={formik.errors.phone && formik.touched.phone ? 'Номер телефона должен быть в формате 7 999 999-99-99' : ''}
 							/>
 						</div>
 					</div>
 					<div className='mt-6  w-full'>
-						<div className='relative flex items-center justify-center'></div>
+						<div className='relative flex items-center justify-center'>
+							<TextField
+								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+								id='outlined-basic'
+								label='Описание'
+								onBlur={formik.handleBlur}
+								aria-label='Description'
+								name='description'
+								value={formik.values.description || ''}
+								onChange={formik.handleChange}
+								helperText={formik.errors.description && formik.touched.description ? 'Описание не обязательно для заполнения' : ''}
+							/>
+						</div>
 					</div>
 					<div className='mt-8  justify-center items-center flex'>
 						<AntButton

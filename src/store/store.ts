@@ -2,12 +2,14 @@ import { ConfigureStoreOptions, combineReducers, configureStore } from '@reduxjs
 
 import { authAPI } from '@/services/authApiService'
 import { userAPI } from '@/services/userService'
+import { createOrderSlice } from '@/store/reducer/createOrderSlice'
 import { userSlice } from '@/store/reducer/userSlice'
 
 const rootReducer = combineReducers({
 	[userAPI.reducerPath]: userAPI.reducer,
 	[authAPI.reducerPath]: authAPI.reducer,
-	userState: userSlice.reducer
+	userState: userSlice.reducer,
+	createOrder: createOrderSlice.reducer
 })
 
 export const setupStore = (options?: ConfigureStoreOptions['preloadedState'] | undefined) => {

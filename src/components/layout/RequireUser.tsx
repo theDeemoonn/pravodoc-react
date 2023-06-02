@@ -17,6 +17,7 @@ const RequireUser = ({ allowedRoles }: { allowedRoles: string[] }) => {
 	})
 
 	const location = useLocation()
+	console.log('loc', location.state?.from.pathname)
 	if (logged_in && !user) {
 		return (
 			<>
@@ -30,7 +31,7 @@ const RequireUser = ({ allowedRoles }: { allowedRoles: string[] }) => {
 		)
 	}
 
-	return logged_in && allowedRoles.includes(user?.roles[0].value as string) ? <Outlet /> : <Navigate to='/login' state={{ from: location }} replace />
+	return logged_in && allowedRoles.includes(user?.roles[0].value as string) ? <Outlet /> : <Navigate to='/login' state={{ from: location }} />
 }
 
 export default RequireUser
