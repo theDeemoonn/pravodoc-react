@@ -1,10 +1,10 @@
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { FormControl, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField } from '@mui/material'
 import { notification } from 'antd'
-import { useFormik } from 'formik'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
+import { SubmitErrorHandler, useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import * as yup from 'yup'
 import { TypeOf, object, string } from 'zod'
 
 import FaceBook from '@/assets/svg/facebook'
@@ -16,11 +16,6 @@ const loginSchema = object({
 	password: string().min(1, 'Необходим пароль').min(6, 'Пароль должен быть больше 6 символов').max(32, 'Пароль должен быть меньше 32 символов')
 })
 
-const validationSchema = yup.object({
-	email: yup.string().email('Адрес электронной почты недействителен').required('Укажите адрес электронной почты'),
-	password: yup.string().min(6, 'Пароль должен быть больше 6 символов').max(32, 'Пароль должен быть меньше 32 символов').required('Необходим пароль')
-})
-
 export type LoginInput = TypeOf<typeof loginSchema>
 
 function Login() {
@@ -30,34 +25,14 @@ function Login() {
 	const navigate = useNavigate()
 	const location = useLocation()
 	const from = ((location.state as any)?.from.pathname as string) || `/profile`
+	const [passwordShown, setPasswordShown] = useState(false)
 
-	console.log('from', location)
-
-	const formik = useFormik({
-		initialValues: {
-			email: '',
-			password: '',
-			showPassword: false
-		},
-		validationSchema: validationSchema,
-		enableReinitialize: true,
-		// validateOnBlur: true,
-		validateOnChange: false,
-		onSubmit: () => {
-			loginUser(formik.values)
-				.unwrap()
-				.then(() => {
-					formik.resetForm()
-				})
-				.catch(err => {
-					api.error({
-						message: 'Ошибка',
-						description: err.data.message,
-						placement: 'topRight',
-						duration: 5
-					})
-				})
-		}
+	const {
+		handleSubmit,
+		register,
+		formState: { errors }
+	} = useForm<LoginInput>({
+		resolver: zodResolver(loginSchema)
 	})
 
 	useEffect(() => {
@@ -74,17 +49,29 @@ function Login() {
 	}, [isSuccess])
 
 	const handleClickShowPassword = () => {
-		formik.setFieldValue('showPassword', !formik.values.showPassword)
+		setPasswordShown(!passwordShown)
 	}
 
 	const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
 		event.preventDefault()
 	}
 
-	const handleEnter = (e: React.KeyboardEvent<HTMLDivElement>) => {
-		if (e.key === 'Enter') {
-			formik.handleSubmit()
-		}
+	const onSubmit = async (data: LoginInput) => {
+		await loginUser(data).unwrap()
+		api.success({
+			message: 'Успешно',
+			description: 'Вы вошли в аккаунт',
+			placement: 'topRight'
+		})
+	}
+
+	const onErrors: SubmitErrorHandler<LoginInput> = data => {
+		api.error({
+			message: data.email?.message || data.password?.message,
+			description: 'Ошибка',
+			placement: 'topRight',
+			duration: 5
+		})
 	}
 
 	return (
@@ -105,67 +92,59 @@ function Login() {
 							Зарегистрироваться
 						</Link>
 					</p>
-
-					<div className='mt-6  w-full'>
-						<div className='relative flex items-center justify-center'>
-							<TextField
-								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-								id='outlined-basic'
-								label='Электронная почта'
-								name='email'
-								value={formik.values.email || ''}
-								onChange={formik.handleChange}
-								onBlur={formik.handleBlur}
-								error={!!formik.errors.email && !!formik.touched.email}
-								// helperText='Incorrect entry.'
-							/>
-						</div>
-					</div>
-					<div className='mt-6  w-full'>
-						<div className='relative flex items-center justify-center'>
-							<FormControl
-								sx={{
-									width: 500,
-									maxWidth: '100%'
-								}}
-								variant='outlined'
-							>
-								<InputLabel htmlFor='outlined-adornment-password'>Пароль</InputLabel>
-								<OutlinedInput
-									id='outlined-adornment-password'
-									name='password'
-									type={formik.values.showPassword ? 'text' : 'password'}
-									value={formik.values.password || ''}
-									onChange={formik.handleChange}
-									onBlur={formik.handleBlur}
-									error={!!formik.errors.password && !!formik.touched.password}
-									endAdornment={
-										<InputAdornment position='end'>
-											<IconButton
-												aria-label='toggle password visibility'
-												onClick={handleClickShowPassword}
-												onMouseDown={handleMouseDownPassword}
-												edge='end'
-											>
-												{formik.values.showPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-											</IconButton>
-										</InputAdornment>
-									}
-									label={'Пароль'}
+					<form onSubmit={handleSubmit(onSubmit, onErrors)}>
+						<div className='mt-6  w-full'>
+							<div className='relative flex items-center justify-center'>
+								<TextField
+									className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+									id='outlined-basic'
+									label='Электронная почта'
+									placeholder='Электронная почта'
+									{...register('email')}
+									error={!!errors.email}
 								/>
-							</FormControl>
+							</div>
 						</div>
-					</div>
+						<div className='mt-6  w-full'>
+							<div className='relative flex items-center justify-center'>
+								<FormControl
+									sx={{
+										width: 500,
+										maxWidth: '100%'
+									}}
+									variant='outlined'
+								>
+									<InputLabel htmlFor='outlined-adornment-password'>Пароль</InputLabel>
+									<OutlinedInput
+										id='outlined-adornment-password'
+										placeholder='Пароль'
+										{...register('password')}
+										type={passwordShown ? 'text' : 'password'}
+										error={!!errors.password}
+										endAdornment={
+											<InputAdornment position='end'>
+												<IconButton
+													aria-label='toggle password visibility'
+													onClick={handleClickShowPassword}
+													onMouseDown={handleMouseDownPassword}
+													edge='end'
+												>
+													{passwordShown ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+												</IconButton>
+											</InputAdornment>
+										}
+										label={'Пароль'}
+									/>
+								</FormControl>
+							</div>
+						</div>
 
-					<div className='mt-8  justify-center items-center flex'>
-						<AntButton
-							className='flex w-48  justify-center hover:text-white hover:bg-green-500'
-							loading={isLoading}
-							onClick={() => formik.handleSubmit()}
-						>
-							Войти
-						</AntButton>
-					</div>
+						<div className='mt-8  justify-center items-center flex'>
+							<AntButton className='flex w-48  justify-center hover:text-white hover:bg-green-500' loading={isLoading} htmlType={'submit'}>
+								Войти
+							</AntButton>
+						</div>
+					</form>
 					<div className='w-full flex items-center justify-between py-5'>
 						<hr className='w-full bg-gray-400' />
 						<p className='text-base font-medium leading-4 px-2.5 text-gray-400'>ИЛИ</p>

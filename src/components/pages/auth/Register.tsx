@@ -1,34 +1,28 @@
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { FormControl, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField } from '@mui/material'
 import { notification } from 'antd'
-import { useFormik } from 'formik'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
+import { SubmitErrorHandler, useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import * as yup from 'yup'
 import { TypeOf, number, object, string } from 'zod'
 
 import FaceBook from '@/assets/svg/facebook'
+import { LoginInput } from '@/components/pages/auth/Login'
 import { useRegisterUserMutation } from '@/services/authApiService'
 import { AntButton } from '@/ui'
-import { phoneRegExp } from '@/utils/phone-number'
 
 const registerSchema = object({
 	email: string().min(1, 'Укажите адрес электронной почты').email('Адрес электронной почты недействителен').trim(),
 	password: string().min(1, 'Необходим пароль').min(6, 'Пароль должен быть больше 6 символов').max(32, 'Пароль должен быть меньше 32 символов'),
 	surname: string().min(1, 'Требуется фамилия').trim(),
 	name: string().min(1, 'Требуется имя ').trim(),
-	age: number().min(1, 'Укажите возраст').max(100, 'Укажите возраст'),
-	phone: number().min(1, 'Укажите номер телефона')
-})
-
-const validationSchema = yup.object({
-	email: yup.string().email('Адрес электронной почты недействителен').required('Укажите адрес электронной почты'),
-	password: yup.string().min(6, 'Пароль должен быть больше 6 символов').max(32, 'Пароль должен быть меньше 32 символов').required('Необходим пароль'),
-	surname: yup.string().required('Требуется фамилия'),
-	name: yup.string().required('Требуется имя'),
-	age: yup.number().required('Укажите возраст').max(100, 'Ого'),
-	phone: yup.string().min(11).max(11).matches(phoneRegExp, 'Не верный номер').required('Укажите номер телефона'),
-	description: yup.string().max(1000, 'Максимум 1000 символов')
+	age: string().min(1, 'Укажите возраст').max(100, 'Укажите возраст'),
+	phone: string()
+		.min(1, 'Укажите номер телефона')
+		.regex(/^\+?[0-9]{10,14}$/, 'Номер телефона недействителен')
+		.trim(),
+	description: string().max(1000, 'Максимум 1000 символов')
 })
 
 export type RegisterInput = TypeOf<typeof registerSchema>
@@ -38,35 +32,14 @@ const RegisterPage = () => {
 	const navigate = useNavigate()
 	const location = useLocation()
 	const from = ((location.state as any)?.from.pathname as string) || `/profile`
+	const [passwordShown, setPasswordShown] = useState(false)
 
-	const formik = useFormik({
-		initialValues: {
-			email: '',
-			password: '',
-			surname: '',
-			name: '',
-			age: 0,
-			phone: 0,
-			showPassword: false,
-			description: ''
-		},
-		validationSchema: validationSchema,
-
-		validateOnBlur: true,
-		enableReinitialize: true,
-		validateOnChange: true,
-		onSubmit: () => {
-			registerUser(formik.values)
-				.unwrap()
-				.catch(err => {
-					api.error({
-						message: 'Ошибка',
-						description: err.data.message,
-						placement: 'topRight',
-						duration: 5
-					})
-				})
-		}
+	const {
+		handleSubmit,
+		register,
+		formState: { errors }
+	} = useForm<RegisterInput>({
+		resolver: zodResolver(registerSchema)
 	})
 
 	useEffect(() => {
@@ -81,12 +54,31 @@ const RegisterPage = () => {
 	}, [isSuccess])
 
 	const handleClickShowPassword = () => {
-		formik.setFieldValue('showPassword', !formik.values.showPassword)
+		setPasswordShown(!passwordShown)
 	}
 
 	const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
 		event.preventDefault()
 	}
+
+	const onSubmit = async (data: RegisterInput) => {
+		await registerUser(data).unwrap()
+		api.success({
+			message: 'Успешно',
+			description: 'Вы вошли в аккаунт',
+			placement: 'topRight'
+		})
+	}
+
+	const onErrors: SubmitErrorHandler<LoginInput> = data => {
+		api.error({
+			message: data.email?.message || data.password?.message,
+			description: 'Ошибка',
+			placement: 'topRight',
+			duration: 5
+		})
+	}
+
 	return (
 		<div className='h-full bg-gradient-to-tl from-white-600 to-indigo-900 w-full py-16 px-4 '>
 			{contextHolder}
@@ -104,146 +96,131 @@ const RegisterPage = () => {
 							Войти
 						</Link>
 					</p>
-
-					<div className='mt-6  w-full'>
-						<div className='relative flex items-center justify-center'>
-							<TextField
-								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-								id='outlined-basic'
-								label='Электронная почта'
-								name='email'
-								value={formik.values.email || ''}
-								onChange={formik.handleChange}
-								onBlur={formik.handleBlur}
-								error={!!formik.errors.email && !!formik.touched.email}
-								// helperText='Incorrect entry.'
-							/>
-						</div>
-					</div>
-					<div className='mt-6  w-full'>
-						<div className='relative flex items-center justify-center'>
-							<FormControl
-								sx={{
-									width: 500,
-									maxWidth: '100%'
-								}}
-								variant='outlined'
-							>
-								<InputLabel htmlFor='outlined-adornment-password'>Пароль</InputLabel>
-								<OutlinedInput
-									id='outlined-adornment-password'
-									name='password'
-									type={formik.values.showPassword ? 'text' : 'password'}
-									value={formik.values.password || ''}
-									onChange={formik.handleChange}
-									onBlur={formik.handleBlur}
-									error={!!formik.errors.password && !!formik.touched.password}
-									endAdornment={
-										<InputAdornment position='end'>
-											<IconButton
-												aria-label='toggle password visibility'
-												onClick={handleClickShowPassword}
-												onMouseDown={handleMouseDownPassword}
-												edge='end'
-											>
-												{formik.values.showPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-											</IconButton>
-										</InputAdornment>
-									}
-									label={'Пароль'}
+					<form onSubmit={handleSubmit(onSubmit, onErrors)}>
+						<div className='mt-6  w-full'>
+							<div className='relative flex items-center justify-center'>
+								<TextField
+									className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+									id='outlined-basic'
+									label='Электронная почта'
+									placeholder='Электронная почта'
+									{...register('email')}
+									error={!!errors.email}
+									// helperText='Incorrect entry.'
 								/>
-							</FormControl>
+							</div>
 						</div>
-					</div>
-					<div className='mt-6  w-full'>
-						<div className='relative flex items-center justify-center'>
-							<TextField
-								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-								id='outlined-basic'
-								label='Фамилия'
-								aria-label='Surname'
-								name='surname'
-								onBlur={formik.handleBlur}
-								value={formik.values.surname || ''}
-								onChange={formik.handleChange}
-								error={!!formik.errors.surname && !!formik.touched.surname}
-								// helperText='Incorrect entry.'
-							/>
+						<div className='mt-6  w-full'>
+							<div className='relative flex items-center justify-center'>
+								<FormControl
+									sx={{
+										width: 500,
+										maxWidth: '100%'
+									}}
+									variant='outlined'
+								>
+									<InputLabel htmlFor='outlined-adornment-password'>Пароль</InputLabel>
+									<OutlinedInput
+										id='outlined-adornment-password'
+										placeholder='Пароль'
+										{...register('password')}
+										type={passwordShown ? 'text' : 'password'}
+										error={!!errors.password}
+										endAdornment={
+											<InputAdornment position='end'>
+												<IconButton
+													aria-label='toggle password visibility'
+													onClick={handleClickShowPassword}
+													onMouseDown={handleMouseDownPassword}
+													edge='end'
+												>
+													{passwordShown ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+												</IconButton>
+											</InputAdornment>
+										}
+										label={'Пароль'}
+									/>
+								</FormControl>
+							</div>
 						</div>
-					</div>
-					<div className='mt-6  w-full'>
-						<div className='relative flex items-center justify-center'>
-							<TextField
-								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-								id='outlined-basic'
-								label='Имя'
-								aria-label='Name'
-								name='name'
-								onBlur={formik.handleBlur}
-								value={formik.values.name || ''}
-								onChange={formik.handleChange}
-								error={!!formik.errors.name && !!formik.touched.name}
-								// helperText='Incorrect entry.'
-							/>
+						<div className='mt-6  w-full'>
+							<div className='relative flex items-center justify-center'>
+								<TextField
+									className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+									id='outlined-basic'
+									label='Фамилия'
+									aria-label='Surname'
+									placeholder='Фамилия'
+									{...register('surname')}
+									error={!!errors.surname}
+									// helperText='Incorrect entry.'
+								/>
+							</div>
 						</div>
-					</div>
-					<div className='mt-6  w-full'>
-						<div className='relative flex items-center justify-center'>
-							<TextField
-								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-								id='outlined-basic'
-								label='Возраст'
-								onBlur={formik.handleBlur}
-								aria-label='Age'
-								name='age'
-								value={formik.values.age || ''}
-								onChange={formik.handleChange}
-								error={!!formik.errors.age && !!formik.touched.age}
-								helperText={formik.errors.age ? 'Неужели вам больше 100?' : ''}
-							/>
+						<div className='mt-6  w-full'>
+							<div className='relative flex items-center justify-center'>
+								<TextField
+									className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+									id='outlined-basic'
+									label='Имя'
+									aria-label='Name'
+									placeholder='Имя'
+									{...register('name')}
+									error={!!errors.name}
+									// helperText='Incorrect entry.'
+								/>
+							</div>
 						</div>
-					</div>
-					<div className='mt-6  w-full'>
-						<div className='relative flex items-center justify-center'>
-							<TextField
-								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-								id='outlined-basic'
-								label='Телефон'
-								onBlur={formik.handleBlur}
-								aria-label='Phone'
-								name='phone'
-								value={formik.values.phone || ''}
-								inputMode={'tel'}
-								onChange={formik.handleChange}
-								error={!!formik.errors.phone && !!formik.touched.phone}
-								helperText={formik.errors.phone && formik.touched.phone ? 'Номер телефона должен быть в формате 7 999 999-99-99' : ''}
-							/>
+						<div className='mt-6  w-full'>
+							<div className='relative flex items-center justify-center'>
+								<TextField
+									className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+									id='outlined-basic'
+									label='Возраст'
+									aria-label='Age'
+									type='number'
+									placeholder='Возраст'
+									{...register('age')}
+									error={!!errors.age}
+									helperText={!!errors.age ? 'Неужели вам больше 100?' : ''}
+								/>
+							</div>
 						</div>
-					</div>
-					<div className='mt-6  w-full'>
-						<div className='relative flex items-center justify-center'>
-							<TextField
-								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-								id='outlined-basic'
-								label='Описание'
-								onBlur={formik.handleBlur}
-								aria-label='Description'
-								name='description'
-								value={formik.values.description || ''}
-								onChange={formik.handleChange}
-								helperText={formik.errors.description && formik.touched.description ? 'Описание не обязательно для заполнения' : ''}
-							/>
+						<div className='mt-6  w-full'>
+							<div className='relative flex items-center justify-center'>
+								<TextField
+									className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+									id='outlined-basic'
+									label='Телефон'
+									aria-label='Phone'
+									placeholder='Телефон'
+									{...register('phone')}
+									error={!!errors.phone}
+									inputMode={'tel'}
+									helperText={!!errors.phone ? 'Номер телефона должен быть в формате 7 999 999-99-99' : ''}
+								/>
+							</div>
 						</div>
-					</div>
-					<div className='mt-8  justify-center items-center flex'>
-						<AntButton
-							className='flex w-48  justify-center hover:text-white hover:bg-green-500'
-							loading={isLoading}
-							onClick={() => formik.handleSubmit()}
-						>
-							Зарегистрироваться
-						</AntButton>
-					</div>
+						<div className='mt-6  w-full'>
+							<div className='relative flex items-center justify-center'>
+								<TextField
+									className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+									id='outlined-basic'
+									label='Описание'
+									aria-label='Description'
+									placeholder='Описание'
+									{...register('description')}
+									error={!!errors.description}
+									helperText={!!errors.description ? 'Описание не обязательно для заполнения' : ''}
+								/>
+							</div>
+						</div>
+						<div className='mt-8  justify-center items-center flex'>
+							<AntButton className='flex w-48  justify-center hover:text-white hover:bg-green-500' loading={isLoading} htmlType={'submit'}>
+								Зарегистрироваться
+							</AntButton>
+						</div>
+					</form>
 					<div className='w-full flex items-center justify-between py-5'>
 						<hr className='w-full bg-gray-400' />
 						<p className='text-base font-medium leading-4 px-2.5 text-gray-400'>ИЛИ</p>
