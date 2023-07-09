@@ -1,9 +1,9 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { TextField } from '@mui/material'
 import { Modal, ModalProps, notification } from 'antd'
-import { useFormik } from 'formik'
 import React, { useEffect } from 'react'
-import * as yup from 'yup'
-import { TypeOf, number, object, string } from 'zod'
+import { SubmitErrorHandler, useForm } from 'react-hook-form'
+import { TypeOf, object, string } from 'zod'
 
 import { useAppSelector } from '@/hook/redux'
 import { userAPI } from '@/services/userService'
@@ -13,19 +13,11 @@ const registerSchemaModal = object({
 	email: string().min(1, 'Укажите адрес электронной почты').email('Адрес электронной почты недействителен').trim(),
 	surname: string().min(1, 'Требуется фамилия').trim(),
 	name: string().min(1, 'Требуется имя ').trim(),
-	age: number().max(1, 'Ого'),
-	phone: number()
+	age: string().min(1, 'Ого').max(100),
+	phone: string()
 		.min(1, 'Укажите номер телефона')
-		.refine(value => phoneRegExp.test(String(value)), 'Не верный номер')
-})
-
-const validationSchema = yup.object({
-	email: yup.string().email('Адрес электронной почты недействителен'),
-	surname: yup.string(),
-	name: yup.string(),
-	age: yup.number().max(100, 'Ого'),
-	phone: yup.string().min(11).max(11, 'Не верный номер').matches(phoneRegExp, 'Не верный номер'),
-	description: yup.string().max(1000, 'Максимум 1000 символов')
+		.refine(value => phoneRegExp.test(String(value)), 'Не верный номер'),
+	description: string().max(1000, 'Максимум 1000 символов').trim()
 })
 
 export type RegisterInputModal = TypeOf<typeof registerSchemaModal>
@@ -36,44 +28,16 @@ const ProfileEditModal = ({ open, onCancel, title }: ModalProps) => {
 
 	const user = useAppSelector(state => state.userState.user)
 
-	const formik = useFormik({
-		initialValues: {
-			email: user?.email || '',
-			surname: user?.surname || '',
-			name: user?.name || '',
-			age: user?.age || 0,
-			phone: user?.phone || 0,
-			description: user?.description || '',
-			showPassword: false
-		},
-		validationSchema: validationSchema,
-
-		validateOnBlur: true,
-		enableReinitialize: true,
-		validateOnChange: true,
-		onSubmit: () => {
-			updateUser(formik.values)
-				.unwrap()
-				.catch(err => {
-					api.error({
-						message: 'Ошибка',
-						description: err.data.message,
-						placement: 'topRight',
-						duration: 5
-					})
-				})
-		}
+	const {
+		handleSubmit,
+		register,
+		formState: { errors }
+	} = useForm<RegisterInputModal>({
+		resolver: zodResolver(registerSchemaModal)
 	})
 
-	const onOk = () => {
-		formik.handleSubmit()
-	}
-	const handleClickShowPassword = () => {
-		formik.setFieldValue('showPassword', !formik.values.showPassword)
-	}
-
-	const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
-		event.preventDefault()
+	const onOk = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+		await handleSubmit(onSubmit)(e)
 	}
 
 	useEffect(() => {
@@ -85,6 +49,20 @@ const ProfileEditModal = ({ open, onCancel, title }: ModalProps) => {
 			})
 		}
 	}, [isSuccess])
+
+	const onSubmit = async (data: RegisterInputModal) => {
+		await updateUser(data).unwrap()
+	}
+
+	const onErrors: SubmitErrorHandler<RegisterInputModal> = data => {
+		api.error({
+			message:
+				data.email?.message || data.age?.message || data.name?.message || data.phone?.message || data.surname?.message || data.description?.message,
+			description: 'Ошибка',
+			placement: 'topRight',
+			duration: 5
+		})
+	}
 
 	return (
 		<>
@@ -100,104 +78,101 @@ const ProfileEditModal = ({ open, onCancel, title }: ModalProps) => {
 				onCancel={onCancel}
 				destroyOnClose
 				okButtonProps={{
-					disabled: !!formik.errors.email || !!formik.errors.surname || !!formik.errors.name || !!formik.errors.phone
+					disabled: !!errors.email || !!errors.name || !!errors.surname || !!errors.age || !!errors.phone || !!errors.description
 				}}
 			>
-				<div className='mt-6  w-full'>
-					<div className='relative flex items-center justify-center'>
-						<TextField
-							className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-							id='outlined-basic'
-							label='Электронная почта'
-							name='email'
-							value={formik.values.email || user?.email}
-							onChange={formik.handleChange}
-							onBlur={formik.handleBlur}
-							error={!!formik.touched.email && !!formik.errors.email}
-							// helperText='Incorrect entry.'
-						/>
+				<form onSubmit={handleSubmit(onSubmit, onErrors)}>
+					<div className='mt-6  w-full'>
+						<div className='relative flex items-center justify-center'>
+							<TextField
+								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+								id='outlined-basic'
+								label='Электронная почта'
+								placeholder='Электронная почта'
+								{...register('email', { required: true })}
+								defaultValue={user?.email}
+								error={!!errors.email}
+								// helperText='Incorrect entry.'
+							/>
+						</div>
 					</div>
-				</div>
-				<div className='mt-6  w-full'>
-					<div className='relative flex items-center justify-center'>
-						<TextField
-							className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-							id='outlined-basic'
-							label='Фамилия'
-							aria-label='Surname'
-							name='surname'
-							onBlur={formik.handleBlur}
-							value={formik.values.surname || user?.surname}
-							onChange={formik.handleChange}
-							error={!!formik.touched.surname && !!formik.errors.surname}
-							// helperText='Incorrect entry.'
-						/>
+					<div className='mt-6  w-full'>
+						<div className='relative flex items-center justify-center'>
+							<TextField
+								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+								id='outlined-basic'
+								label='Фамилия'
+								aria-label='Surname'
+								placeholder='Фамилия'
+								{...register('surname', { required: true })}
+								defaultValue={user?.surname}
+								error={!!errors.surname}
+								// helperText='Incorrect entry.'
+							/>
+						</div>
 					</div>
-				</div>
-				<div className='mt-6  w-full'>
-					<div className='relative flex items-center justify-center'>
-						<TextField
-							className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-							id='outlined-basic'
-							label='Имя'
-							aria-label='Name'
-							name='name'
-							onBlur={formik.handleBlur}
-							value={formik.values.name || user?.name}
-							onChange={formik.handleChange}
-							error={!!formik.touched.name && !!formik.errors.name}
-							// helperText='Incorrect entry.'
-						/>
+					<div className='mt-6  w-full'>
+						<div className='relative flex items-center justify-center'>
+							<TextField
+								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+								id='outlined-basic'
+								label='Имя'
+								aria-label='Name'
+								placeholder='Имя'
+								{...register('name', { required: true })}
+								defaultValue={user?.name}
+								error={!!errors.name}
+								// helperText='Incorrect entry.'
+							/>
+						</div>
 					</div>
-				</div>
-				<div className='mt-6  w-full'>
-					<div className='relative flex items-center justify-center'>
-						<TextField
-							className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-							id='outlined-basic'
-							label='Возраст'
-							onBlur={formik.handleBlur}
-							aria-label='Age'
-							name='age'
-							value={formik.values.age || user?.age}
-							onChange={formik.handleChange}
-							error={!!formik.touched.age && !!formik.errors.age}
-							helperText={formik.errors.age ? 'Неужели вам больше 100?' : ''}
-						/>
+					<div className='mt-6  w-full'>
+						<div className='relative flex items-center justify-center'>
+							<TextField
+								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+								id='outlined-basic'
+								label='Возраст'
+								aria-label='Age'
+								placeholder='Возраст'
+								{...register('age', { required: true })}
+								defaultValue={user?.age}
+								error={!!errors.age}
+								helperText={!!errors.age ? 'Неужели вам больше 100?' : ''}
+							/>
+						</div>
 					</div>
-				</div>
-				<div className='mt-6  w-full'>
-					<div className='relative flex items-center justify-center'>
-						<TextField
-							className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-							id='outlined-basic'
-							label='Телефон'
-							onBlur={formik.handleBlur}
-							aria-label='Phone'
-							name='phone'
-							value={formik.values.phone || user?.phone}
-							onChange={formik.handleChange}
-							error={!!formik.touched.phone && !!formik.errors.phone}
-							helperText={formik.errors.phone && formik.touched.phone ? 'Номер телефона должен быть в формате 7 999 999-99-99' : ''}
-						/>
+					<div className='mt-6  w-full'>
+						<div className='relative flex items-center justify-center'>
+							<TextField
+								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+								id='outlined-basic'
+								label='Телефон'
+								aria-label='Phone'
+								placeholder='Телефон'
+								{...register('phone', { required: true })}
+								defaultValue={user?.phone}
+								error={!!errors.phone}
+								inputMode={'tel'}
+								helperText={!!errors.phone ? 'Номер телефона должен быть в формате 7 999 999-99-99' : ''}
+							/>
+						</div>
 					</div>
-				</div>
-				<div className='mt-6  w-full'>
-					<div className='relative flex items-center justify-center'>
-						<TextField
-							className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
-							id='outlined-basic'
-							label='Описание'
-							onBlur={formik.handleBlur}
-							aria-label='Description'
-							name='description'
-							value={formik.values.description || user?.description}
-							error={!!formik.touched.description && !!formik.errors.description}
-							onChange={formik.handleChange}
-							helperText={formik.errors.description && formik.touched.description ? 'Описание не обязательно для заполнения' : ''}
-						/>
+					<div className='mt-6  w-full'>
+						<div className='relative flex items-center justify-center'>
+							<TextField
+								className=' border rounded  text-s font-medium leading-none text-gray-800 py-3 w-full pl-3 mt-2'
+								id='outlined-basic'
+								label='Описание'
+								aria-label='Description'
+								placeholder='Описание'
+								{...register('description', { required: true })}
+								defaultValue={user?.description}
+								error={!!errors.description}
+								helperText={!!errors.description ? 'Описание не обязательно для заполнения' : ''}
+							/>
+						</div>
 					</div>
-				</div>
+				</form>
 			</Modal>
 		</>
 	)

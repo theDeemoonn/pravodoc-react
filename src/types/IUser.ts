@@ -10,8 +10,8 @@ export interface IUser {
 	password: string
 	surname: string
 	name: string
-	age: number
-	phone: number
+	age: string
+	phone: string
 	description: string
 	avatar: string
 	banned: boolean
