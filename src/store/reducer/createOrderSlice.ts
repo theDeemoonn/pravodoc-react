@@ -6,6 +6,7 @@ interface CreateOrderSliceState {
 	description: string
 	price: string
 	date: string
+	userID: string
 }
 
 const initialState: CreateOrderSliceState = {
@@ -13,7 +14,8 @@ const initialState: CreateOrderSliceState = {
 	title: '',
 	description: '',
 	price: '',
-	date: ''
+	date: '',
+	userID: ''
 }
 
 export const createOrderSlice = createSlice({
@@ -34,6 +36,9 @@ export const createOrderSlice = createSlice({
 		},
 		setDate: (state, action) => {
 			state.date = action.payload
+		},
+		setUserID: (state, action) => {
+			state.userID = action.payload
 		}
 	}
 })

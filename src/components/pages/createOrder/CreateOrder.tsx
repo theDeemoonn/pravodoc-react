@@ -1,4 +1,3 @@
-import { EditOutlined, EllipsisOutlined, SettingOutlined } from '@ant-design/icons'
 import { Avatar, Button, Card, Steps, message, theme } from 'antd'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useNavigation } from 'react-router-dom'
@@ -94,6 +93,7 @@ function createOrder() {
 	const navigate = useNavigate()
 	const location = useLocation()
 	const from = ((location.state as any)?.from.pathname as string) || `/profile`
+	const userID = useAppSelector(state => state.userState.user?.id)
 
 	const { title, description, date, category, price } = useAppSelector(state => state.createOrder)
 
@@ -117,7 +117,7 @@ function createOrder() {
 		if (current === 0 && !category) {
 			return true
 		}
-		return current === 1 && !title && !description && !date && !price
+		return current === 1 && !title && !description && !date && !price && !userID
 	}
 
 	const postOrder = async () => {
@@ -132,7 +132,8 @@ function createOrder() {
 				description,
 				date,
 				category,
-				price
+				price,
+				userID
 			})
 		})
 

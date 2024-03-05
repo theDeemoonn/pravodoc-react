@@ -5,10 +5,9 @@ import { notification } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { SubmitErrorHandler, useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { TypeOf, number, object, string } from 'zod'
+import { TypeOf, object, string } from 'zod'
 
 import FaceBook from '@/assets/svg/facebook'
-import { LoginInput } from '@/components/pages/auth/Login'
 import { useRegisterUserMutation } from '@/services/authApiService'
 import { AntButton } from '@/ui'
 
@@ -17,12 +16,12 @@ const registerSchema = object({
 	password: string().min(1, 'Необходим пароль').min(6, 'Пароль должен быть больше 6 символов').max(32, 'Пароль должен быть меньше 32 символов'),
 	surname: string().min(1, 'Требуется фамилия').trim(),
 	name: string().min(1, 'Требуется имя ').trim(),
-	age: string().min(1, 'Укажите возраст').max(100, 'Укажите возраст'),
+	age: string().min(1, 'Укажите возраст').max(100, 'Укажите возраст').trim(),
 	phone: string()
 		.min(1, 'Укажите номер телефона')
 		.regex(/^\+?[0-9]{10,14}$/, 'Номер телефона недействителен')
 		.trim(),
-	description: string().max(1000, 'Максимум 1000 символов')
+	description: string().max(1000, 'Максимум 1000 символов').trim()
 })
 
 export type RegisterInput = TypeOf<typeof registerSchema>
@@ -70,7 +69,7 @@ const RegisterPage = () => {
 		})
 	}
 
-	const onErrors: SubmitErrorHandler<LoginInput> = data => {
+	const onErrors: SubmitErrorHandler<RegisterInput> = data => {
 		api.error({
 			message: data.email?.message || data.password?.message,
 			description: 'Ошибка',
